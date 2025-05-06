@@ -8,6 +8,10 @@ FROM python:3.12
 WORKDIR /app
 # Дальнейшие инструкции будут выполняться в директории /app
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-distutils \
+    && rm -rf /var/lib/apt/lists/* \
+
 # Скопировать с локального компьютера файл зависимостей
 # в текущую директорию (текущая директория — это /app).
 COPY requirements.txt .
