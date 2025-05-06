@@ -2,15 +2,15 @@
 # который содержит файлы ОС и интерпретатор Python 3.12.
 FROM python:3.12
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-distutils \
+    && rm -rf /var/lib/apt/lists/* \
+
 # Переходим в образе в директорию /app: в ней будем хранить код проекта.
 # Если директории с указанным именем нет, она будет создана.
 # Название директории может быть любым.
 WORKDIR /app
 # Дальнейшие инструкции будут выполняться в директории /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-distutils \
-    && rm -rf /var/lib/apt/lists/* \
 
 # Скопировать с локального компьютера файл зависимостей
 # в текущую директорию (текущая директория — это /app).
