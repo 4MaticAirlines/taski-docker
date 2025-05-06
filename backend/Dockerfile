@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-distutils \
     && rm -rf /var/lib/apt/lists/* \
 
+RUN pip install --upgrade pip setuptools
 # Переходим в образе в директорию /app: в ней будем хранить код проекта.
 # Если директории с указанным именем нет, она будет создана.
 # Название директории может быть любым.
