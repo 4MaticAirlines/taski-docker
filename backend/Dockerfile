@@ -2,11 +2,6 @@
 # который содержит файлы ОС и интерпретатор Python 3.12.
 FROM python:3.12
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    python3-distutils \
-    && rm -rf /var/lib/apt/lists/* \
-
-RUN pip install --upgrade pip setuptools
 # Переходим в образе в директорию /app: в ней будем хранить код проекта.
 # Если директории с указанным именем нет, она будет создана.
 # Название директории может быть любым.
@@ -27,4 +22,4 @@ RUN pip install -r requirements.txt --no-cache-dir
 COPY . .
 
 # При старте контейнера запустить сервер разработки.
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0:8000"]
