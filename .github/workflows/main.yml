@@ -69,6 +69,3 @@ jobs:
           context: ./backend/
           push: true
           tags: alexandermolodtsov/taski_backend:latest
-        
-
-
