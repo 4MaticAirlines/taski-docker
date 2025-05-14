@@ -1,4 +1,3 @@
-# docker-compose.yml
 version: '3'
 
 volumes:
@@ -11,21 +10,22 @@ services:
     env_file: .env
     volumes:
       - pg_data:/var/lib/postgresql/data
+
   backend:
-    build: ./backend/
+    image: alexandermolodtsov/taski_backend:latest  # Используем образ из Docker Hub
     env_file: .env
     volumes:
       - static:/backend_static
 
   frontend:
+    image: alexandermolodtsov/taski_frontend:latest  # Используем образ из Docker Hub
     env_file: .env
-    build: ./frontend/
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/frontend_static
 
   gateway:
-    build: ./gateway/
+    image: alexandermolodtsov/taski_gateway:latest  # Используем образ из Docker Hub
     env_file: .env
     volumes:
       - static:/staticfiles

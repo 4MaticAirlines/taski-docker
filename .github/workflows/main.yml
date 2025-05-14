@@ -131,6 +131,7 @@ jobs:
           push: true
           # Тут вместо username должен быть ваш логин на Docker Hub
           tags: alexandermolodtsov/taski_gateway:latest
+
   deploy:
     runs-on: ubuntu-latest
     needs:
