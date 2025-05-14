@@ -161,20 +161,23 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            # Очистка и аутентификация
-            docker system prune -a -f
-            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+            # Добавляем пользователя в группу docker (если нужно)
+            sudo usermod -aG docker $USER || true
+            newgrp docker || true
 
-            # Явный pull образов
-            docker pull docker.io/alexandermolodtsov/taski_backend:latest
-            docker pull docker.io/alexandermolodtsov/taski_frontend:latest
-            docker pull docker.io/alexandermolodtsov/taski_gateway:latest
+            # Логинимся в Docker Hub
+            echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+            # Pull образов с sudo
+            sudo docker pull docker.io/alexandermolodtsov/taski_backend:latest
+            sudo docker pull docker.io/alexandermolodtsov/taski_frontend:latest
+            sudo docker pull docker.io/alexandermolodtsov/taski_gateway:latest
 
             # Запуск сервисов
-            cd /home/${{ secrets.USER }}/taski
-            docker compose -f docker-compose.production.yml up -d --force-recreate
+            cd /home/$USER/taski
+            sudo docker compose -f docker-compose.production.yml up -d --force-recreate
 
             # Миграции и статика
-            docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-            docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
-            docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
+            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
