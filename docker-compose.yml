@@ -1,33 +1,55 @@
-version: '3'
+- name: Deploy application
+  uses: appleboy/ssh-action@v0.1.10
+  with:
+    host: ${{ secrets.HOST }}
+    username: ${{ secrets.USER }}
+    key: ${{ secrets.SSH_KEY }}
+    passphrase: ${{ secrets.SSH_PASSPHRASE }}
+    script: |
+      # Удаляем старый compose-файл
+      sudo rm -f /home/$USER/taski/docker-compose.production.yml
+      
+      # Создаем новый с правильными именами
+      cat << 'EOF' | sudo tee /home/$USER/taski/docker-compose.production.yml
+      version: '3'
+      volumes:
+        pg_data:
+        static:
 
-volumes:
-  pg_data:
-  static:
+      services:
+        db:
+          image: postgres:13
+          env_file: .env
+          volumes:
+            - pg_data:/var/lib/postgresql/data
 
-services:
-  db:
-    image: postgres:13
-    env_file: .env
-    volumes:
-      - pg_data:/var/lib/postgresql/data
+        backend:
+          image: docker.io/alexandermolodtsov/taski_backend:latest
+          env_file: .env
+          volumes:
+            - static:/backend_static
+          depends_on:
+            - db
 
-  backend:
-    image: alexandermolodtsov/taski_backend:latest  # Используем образ из Docker Hub
-    env_file: .env
-    volumes:
-      - static:/backend_static
+        frontend:
+          image: docker.io/alexandermolodtsov/taski_frontend:latest
+          env_file: .env
+          volumes:
+            - static:/frontend_static
+          command: cp -r /app/build/. /frontend_static/
 
-  frontend:
-    image: alexandermolodtsov/taski_frontend:latest  # Используем образ из Docker Hub
-    env_file: .env
-    command: cp -r /app/build/. /frontend_static/
-    volumes:
-      - static:/frontend_static
+        gateway:
+          image: docker.io/alexandermolodtsov/taski_gateway:latest
+          env_file: .env
+          volumes:
+            - static:/staticfiles
+          ports:
+            - 8000:80
+      EOF
 
-  gateway:
-    image: alexandermolodtsov/taski_gateway:latest  # Используем образ из Docker Hub
-    env_file: .env
-    volumes:
-      - static:/staticfiles
-    ports:
-      - 8000:80
+      # Логинимся и запускаем
+      echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+      cd /home/$USER/taski
+      sudo docker compose -f docker-compose.production.yml down
+      sudo docker compose -f docker-compose.production.yml pull
+      sudo docker compose -f docker-compose.production.yml up -d
