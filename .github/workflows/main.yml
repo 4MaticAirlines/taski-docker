@@ -142,16 +142,16 @@ jobs:
             cd /home/${{ secrets.USER }}/taski
             echo "=== Pulling new images ==="
             docker compose -f docker-compose.production.yml pull
-            
+
             echo "=== Restarting containers ==="
             docker compose -f docker-compose.production.yml down
             docker compose -f docker-compose.production.yml up -d
-            
+
             echo "=== Running migrations ==="
             docker compose -f docker-compose.production.yml exec -T backend python manage.py migrate
-            
+
             echo "=== Collecting static files ==="
             docker compose -f docker-compose.production.yml exec -T backend python manage.py collectstatic --noinput
             docker compose -f docker-compose.production.yml exec -T backend cp -r /app/collected_static/. /backend_static/static/
-            
+
             echo "=== Deployment completed successfully ==="
