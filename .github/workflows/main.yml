@@ -136,7 +136,7 @@ jobs:
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY | trim }}
+          key: ${{ secrets.SSH_KEY}}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd /home/${{ secrets.USER }}/taski
