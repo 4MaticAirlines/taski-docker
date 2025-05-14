@@ -153,6 +153,12 @@ jobs:
           target: "/home/${{ secrets.USER }}/taski/"
           overwrite: true
 
+      - name: Debug Token
+        run:
+          echo "Token length: ${#DOCKER_HUB_TOKEN}"
+        env:
+          DOCKER_HUB_TOKEN: ${{ secrets.DOCKER_HUB_TOKEN }}
+
       - name: Deploy application
         uses: appleboy/ssh-action@v0.1.10
         with:
