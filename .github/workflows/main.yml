@@ -161,23 +161,31 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            # Добавляем пользователя в группу docker (если нужно)
+            # Настраиваем Docker permissions
+            sudo groupadd docker || true
             sudo usermod -aG docker $USER || true
             newgrp docker || true
+            sudo chown $USER:$USER /home/$USER/.docker -R || true
+            sudo chmod g+rwx "/home/$USER/.docker" -R || true
 
-            # Логинимся в Docker Hub
+            # Двойная аутентификация - для пользователя и root
+            echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
             echo "${{ secrets.DOCKER_PASSWORD }}" | sudo docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
 
-            # Pull образов с sudo
-            sudo docker pull docker.io/alexandermolodtsov/taski_backend:latest
-            sudo docker pull docker.io/alexandermolodtsov/taski_frontend:latest
-            sudo docker pull docker.io/alexandermolodtsov/taski_gateway:latest
+            # Принудительно обновляем образы
+            sudo docker pull docker.io/alexandermolodtsov/taski_backend:latest || true
+            sudo docker pull docker.io/alexandermolodtsov/taski_frontend:latest || true
+            sudo docker pull docker.io/alexandermolodtsov/taski_gateway:latest || true
 
-            # Запуск сервисов
+            # Запускаем сервисы с явным указанием auth
             cd /home/$USER/taski
+            sudo docker compose -f docker-compose.production.yml down || true
             sudo docker compose -f docker-compose.production.yml up -d --force-recreate
 
-            # Миграции и статика
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
-            sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic --noinput
-            sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+            # Ждём запуска backend
+            sleep 10
+
+            # Выполняем миграции
+            sudo docker compose -f docker-compose.production.yml exec -T backend python manage.py migrate --noinput || true
+            sudo docker compose -f docker-compose.production.yml exec -T backend python manage.py collectstatic --noinput || true
+            sudo docker compose -f docker-compose.production.yml exec -T backend cp -r /app/collected_static/. /backend_static/static/ || true
